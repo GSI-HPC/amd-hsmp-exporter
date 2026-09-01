@@ -1,0 +1,7 @@
+# build artifacts
+/bin/
+/amd-hsmp-exporter
+coverage.out
+*.rpm
+*.tar.gz
+rpm-artifacts/
