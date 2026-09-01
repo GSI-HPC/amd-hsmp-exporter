@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+version: "2"
+
+linters:
+  # The standard set: errcheck, govet, ineffassign, staticcheck, unused.
+  default: standard
+  settings:
+    govet:
+      enable:
+        - nilness
+
+formatters:
+  enable:
+    - gofmt

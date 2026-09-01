@@ -1,0 +1,116 @@
+# SPDX-License-Identifier: Apache-2.0
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Third-party actions are pinned to full commit SHAs (supply-chain
+# requirement); every job carries the minimum permissions it needs.
+permissions: {}
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: |
+          fmt="$(gofmt -l cmd internal)"
+          if [ -n "$fmt" ]; then
+            echo "gofmt required on:" >&2
+            echo "$fmt" >&2
+            exit 1
+          fi
+      - name: go vet
+        run: go vet ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+      - name: go test
+        run: go test -race -coverprofile=coverage.out ./...
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build (CGO disabled)
+        run: |
+          go build ./...
+          go build -trimpath \
+            -ldflags "-s -w -X main.version=0.0.0-ci -X main.revision=${GITHUB_SHA}" \
+            -o bin/amd-hsmp-exporter ./cmd/amd-hsmp-exporter
+      - name: Assert static linkage
+        run: |
+          file bin/amd-hsmp-exporter
+          file bin/amd-hsmp-exporter | grep -q 'statically linked'
+          ldd bin/amd-hsmp-exporter 2>&1 | grep -q 'not a dynamic executable'
+      - name: Smoke test
+        run: bin/amd-hsmp-exporter --version
+
+  rpm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # EL9 is the supported target; EL10 and Fedora run advisory-only
+          # to catch go-rpm-macros drift early.
+          - image: rockylinux/rockylinux:9
+            artifact: el9
+            experimental: false
+          - image: rockylinux/rockylinux:10
+            artifact: el10
+            experimental: true
+          - image: fedora:latest
+            artifact: fedora
+            experimental: true
+    continue-on-error: ${{ matrix.experimental }}
+    container:
+      image: ${{ matrix.image }}
+      # --privileged solely so the offline-build proof (`unshare -n`) can
+      # create a network namespace inside the container.
+      options: --privileged
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/rpm-build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rpms-${{ matrix.artifact }}
+          path: rpm-artifacts/
+
+  commit-lint:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      # fetch-depth: 0 is required so the full PR commit range exists
+      # locally; without it the range is unavailable and nothing would be
+      # checked.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: commitlint (structure)
+        uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6.2.1
+        with:
+          configFile: .commitlintrc.yml
+      - name: self-contained-facts guard
+        run: |
+          ./scripts/check-commit-context.sh \
+            "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
