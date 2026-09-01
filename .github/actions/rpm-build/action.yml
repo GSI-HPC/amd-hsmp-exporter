@@ -18,7 +18,11 @@ runs:
         if [ "${ID}" != "fedora" ]; then
           dnf -y install epel-release
         fi
-        dnf -y install rpm-build rpmlint systemd-rpm-macros golang git-core util-linux
+        # glibc-langpack-en: rpmlint 2.x parses the spec under
+        # LC_ALL=en_US.UTF-8, and a container without that locale makes
+        # bash print setlocale warnings that rpmlint reports as
+        # specfile-warning findings.
+        dnf -y install rpm-build rpmlint systemd-rpm-macros golang git-core util-linux glibc-langpack-en
         # EL9's own go-rpm-macros predate the current Fedora macros, so
         # EPEL ships them as -epel overlay packages; EL10 and Fedora carry
         # the current macros under the plain names.
