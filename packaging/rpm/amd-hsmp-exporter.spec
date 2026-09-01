@@ -108,7 +108,7 @@ install -D -m 0644 -vp packaging/sysconfig/amd-hsmp-exporter %{buildroot}%{_sysc
 %config(noreplace) %{_sysconfdir}/sysconfig/amd-hsmp-exporter
 
 %changelog
-* Tue Sep 01 2026 Dennis <ilmt2000@googlemail.com> - 0.1.0-1
+* Tue Sep 01 2026 Dennis Klein <d.klein@gsi.de> - 0.1.0-1
 - Initial package: per-core energy, per-core boost limit and per-socket
   PROCHOT from /dev/hsmp; hardened systemd unit, sysusers, udev rule and
   modules-load drop-in; fully offline vendored build
