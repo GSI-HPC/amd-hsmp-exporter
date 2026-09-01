@@ -248,5 +248,5 @@ this section is the project-level disclosure instead.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), in particular the Conventional
 Commits requirement, the self-contained-commit-message rule and the
-rebase-merge policy. Licensed under [Apache-2.0](LICENSE); see
+signed-commit, fast-forward merge policy. Licensed under [Apache-2.0](LICENSE); see
 [NOTICE](NOTICE).

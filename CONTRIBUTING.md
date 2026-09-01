@@ -19,9 +19,11 @@ Dependabot opens weekly, grouped pull requests for the workflow actions
 and the Go modules (`.github/dependabot.yml`). A Go bump rewrites
 `go.mod`, `go.sum` and `vendor/` but not the spec's
 `Provides: bundled(golang(...))` lines, so CI fails until the PR gains a
-commit produced by `scripts/check-bundled-provides.sh --fix`. Dependabot's
-own generated commit messages are exempt from the commit-message checks
-below.
+commit produced by `scripts/check-bundled-provides.sh --fix`. Dependabot
+stops rebasing a PR once a human commit is on it, so comment
+`@dependabot rebase` before adding that commit, or rebase by hand
+afterwards. Dependabot's own generated commit messages are exempt from
+the commit-message checks below.
 
 ## Commit messages
 
@@ -55,16 +57,36 @@ opting into the shipped hook:
 $ git config core.hooksPath .githooks
 ```
 
-## Merge policy: rebase-merge only
+## Merge policy: signed commits, fast-forward only
 
-This repository uses rebase merging exclusively. In the repository
-settings, *Allow rebase merging* is enabled while *Allow squash merging*
-and *Allow merge commits* are disabled; keep it that way across
-maintainer changes. Squash merging would discard the individual commit
-messages that commit linting exists to protect. Rebase merging replays
-every commit onto `main` verbatim, so each linted message survives into
-permanent history. A PR title check is therefore deliberately absent,
-because titles never reach `main`.
+`main` accepts only signed commits, and neither force pushes nor
+deletion (repository rulesets: *Require signed commits*, *Block force
+pushes*, *Restrict deletions*; keep them across maintainer changes).
+Sign your commits with GPG or SSH (`git config commit.gpgsign true`).
+Unsigned commits cannot reach `main` at all.
+
+Pull requests are merged by fast-forwarding `main` to the PR head, never
+by squash or merge commits. Squash merging would discard the individual
+commit messages that commit linting exists to protect, and a merge
+commit would break the linear history; keep both buttons disabled in the
+repository settings. GitHub's "Rebase and merge" button is unusable as
+well: it rewrites every commit with GitHub as the committer, which drops
+the authors' signatures, so GitHub refuses it on a branch that requires
+signed commits. A maintainer merges from a clone instead:
+
+```console
+$ gh pr checkout <number>            # CI green, every commit signed
+$ git switch main
+$ git merge --ff-only @{-1}          # fast-forward to the PR head
+$ git push origin main
+```
+
+GitHub marks the pull request as merged once `main` contains its head
+commit. If `main` moved after the PR was last rebased, rebase the PR
+branch and push it first; the person rebasing re-signs the commits.
+Every commit therefore reaches `main` verbatim and each linted message
+survives into permanent history. A PR title check is deliberately
+absent, because titles never reach `main`.
 
 The corollary: every commit in a PR is a public commit and must
 independently satisfy the rules above and build cleanly. Clean up your
