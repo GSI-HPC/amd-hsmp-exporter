@@ -35,6 +35,7 @@ ExclusiveArch:  x86_64
 
 BuildRequires:  golang >= 1.23
 BuildRequires:  systemd-rpm-macros
+%{?sysusers_requires_compat}
 # EL9's own go-rpm-macros predate the current Fedora macros, so EPEL 9
 # ships them as an -epel overlay; EL10 and Fedora carry the current ones.
 %if 0%{?fedora} || 0%{?rhel} >= 10
@@ -86,8 +87,13 @@ install -D -m 0644 -vp packaging/sysconfig/amd-hsmp-exporter %{buildroot}%{_sysc
 %check
 %gocheck
 
+# On Fedora, rpm creates the user from the sysusers.d file itself and the
+# compat macro is defined empty, which would leave an empty %%pre; EL9 and
+# EL10 still create the user through the generated scriptlet.
+%if 0%{?rhel}
 %pre
 %sysusers_create_compat packaging/systemd/amd-hsmp-exporter.sysusers
+%endif
 
 %post
 %systemd_post amd-hsmp-exporter.service
