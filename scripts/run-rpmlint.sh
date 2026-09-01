@@ -18,7 +18,9 @@ set -euo pipefail
 # - invalid-license: EL9's rpmlint predates Fedora's move to SPDX license
 #   identifiers; `Apache-2.0 AND BSD-3-Clause AND MIT` is the correct
 #   current form.
-allow='no-manual-page-for-binary|spelling-error|invalid-license'
+# - no-buildroot-tag: rpm has ignored `BuildRoot:` since 4.6 and the
+#   Fedora/EL packaging guidelines forbid it; rpmlint still asks for it.
+allow='no-manual-page-for-binary|spelling-error|invalid-license|no-buildroot-tag'
 
 out="$(rpmlint "$@" 2>&1)" || true
 printf '%s\n' "$out"
