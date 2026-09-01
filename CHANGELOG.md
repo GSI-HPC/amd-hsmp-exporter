@@ -35,6 +35,9 @@ are not yet considered stable before v1.0.0.
   builds on Rocky 9 (required) plus Rocky 10 and Fedora (advisory),
   commitlint and self-contained-commit-message enforcement; release
   workflow producing RPM, SRPM, static tarball and SHA256SUMS.
+- Dependabot version updates for the workflow actions and Go modules,
+  with CI guards that keep `vendor/` and the spec's
+  `bundled(golang(...))` provides in sync with `go.mod`.
 
 [Unreleased]: https://github.com/GSI-HPC/amd-hsmp-exporter/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/GSI-HPC/amd-hsmp-exporter/releases/tag/v0.1.0
