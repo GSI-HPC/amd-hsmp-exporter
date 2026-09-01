@@ -5,7 +5,7 @@
 This exporter exists to provide exactly the three metrics node_exporter
 cannot: per-core energy, per-core boost limit, per-socket PROCHOT. Pull
 requests adding socket power, temperatures, frequencies, DIMM data,
-bandwidth counters or anything GPU will be declined — those belong to
+bandwidth counters or anything GPU will be declined. Those belong to
 node_exporter's `hwmon`/`rapl`/`cpufreq`/`thermal_zone`/`drm` collectors
 or to a GPU exporter. Scope creep is the failure mode this project was
 started to avoid.
@@ -30,21 +30,21 @@ Every commit follows [Conventional Commits](https://www.conventionalcommits.org/
 `feat fix docs test refactor perf build ci chore revert` and scopes
 `hsmp msr topology collector cmd rpm systemd ci docs deps`. Subject in
 the imperative mood, lower case after the type, no trailing period,
-at most 72 characters. Prefer a bullet-point body — one bullet per
-discrete change or rationale — over prose. Breaking changes use `!` and
+at most 72 characters. Prefer a bullet-point body, one bullet per
+discrete change or rationale, over prose. Breaking changes use `!` and
 a `BREAKING CHANGE:` footer.
 
-**Commits must state self-contained facts.** A message has to remain
-fully intelligible to someone reading `git log` years from now with no
-access to any surrounding context: state *what* changed and *why* in
-terms of the code and the system, never in terms of the process that
-produced the change. Do not reference conversations, review rounds,
-tickets that may become unreachable, relative time ("yesterday", "the
-previous commit") or the author's working state. If a bug motivated the
-change, describe its observable symptom and mechanism in the body.
-Issue/PR numbers may be added as trailers for convenience, but the
-message must stand alone if those links die. Commit messages must not
-reference AI tooling — no co-author trailers, no generation notes.
+Commits must state self-contained facts. A message has to remain fully
+intelligible to someone reading `git log` years from now with no access
+to any surrounding context: state what changed and why in terms of the
+code and the system, never in terms of the process that produced the
+change. Do not reference conversations, review rounds, tickets that may
+become unreachable, relative time ("yesterday", "the previous commit")
+or the author's working state. If a bug motivated the change, describe
+its observable symptom and mechanism in the body. Issue/PR numbers may
+be added as trailers for convenience, but the message must stand alone
+if those links die. Commit messages must not reference AI tooling: no
+co-author trailers, no generation notes.
 
 CI enforces structure with commitlint (`.commitlintrc.yml`) and the
 context rule heuristically with `scripts/check-commit-context.sh`, both
@@ -57,16 +57,16 @@ $ git config core.hooksPath .githooks
 
 ## Merge policy: rebase-merge only
 
-This repository uses **rebase merging exclusively** (repository settings:
-*Allow rebase merging* enabled, *Allow squash merging* and *Allow merge
-commits* disabled — keep it that way across maintainer changes). Squash
-merging would discard the individual commit messages that commit linting
-exists to protect; rebase merging replays every commit onto `main`
-verbatim, so each linted message survives into permanent history. A PR
-title check is therefore deliberately absent — titles never reach
-`main`.
+This repository uses rebase merging exclusively. In the repository
+settings, *Allow rebase merging* is enabled while *Allow squash merging*
+and *Allow merge commits* are disabled; keep it that way across
+maintainer changes. Squash merging would discard the individual commit
+messages that commit linting exists to protect. Rebase merging replays
+every commit onto `main` verbatim, so each linted message survives into
+permanent history. A PR title check is therefore deliberately absent,
+because titles never reach `main`.
 
-The corollary: **every commit in a PR is a public commit** and must
+The corollary: every commit in a PR is a public commit and must
 independently satisfy the rules above and build cleanly. Clean up your
 branch with an interactive rebase before requesting review; do not append
 "fix typo" commits.

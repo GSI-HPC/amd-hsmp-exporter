@@ -1,14 +1,14 @@
 # Topology test fixtures
 
-The `genoa/`, `milan/` and `rome/` trees are **synthesized** fixtures
+The `genoa/`, `milan/` and `rome/` trees are synthesized fixtures
 produced by `gen.py`. They mirror the structural properties of real EPYC
-nodes that the topology code must get right — the CPU enumeration order
+nodes that the topology code must get right: the CPU enumeration order
 (all thread-0 siblings first, then all thread-1 siblings), per-socket APIC
 id offsets that make Linux CPU numbers diverge from APIC ids, sparse
-`core_id` values, and the family 0x17 (Rome) no-SMT case — but with the
-core count cut down to four per socket so the fixtures stay reviewable.
+`core_id` values, and the family 0x17 (Rome) no-SMT case. The core count
+is cut down to four per socket so the fixtures stay reviewable.
 
-They are deliberately *not* byte captures of real machines. When capturing
+They are deliberately not byte captures of real machines. When capturing
 fixtures from real Genoa/Milan/Rome nodes (recommended before relying on a
 new kernel or BIOS generation), place them here as additional directories
 (e.g. `genoa-captured/`) with the same layout:

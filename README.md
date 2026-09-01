@@ -22,15 +22,15 @@ some of this ground via `libamdsmi`. This project replaces the three of
 its metrics that node_exporter cannot supply, with no C library, no cgo
 (`CGO_ENABLED=0` builds a working static binary) and no duplicated series.
 
-Metric names are **not yet stable**: this is a v0.x project and the
+Metric names are not yet stable. This is a v0.x project and the
 exposition may still change between minor versions.
 
 ## Requirements
 
 | Requirement | Detail |
 |---|---|
-| CPU | AMD EPYC family **0x19** (Milan/Genoa/Bergamo/Siena) or **0x1A** (Turin). Family **0x17** (Naples/Rome) is **unsupported**: the kernel driver's family gate (`legacy_hsmp_support()`) only binds 19h/1Ah, so `/dev/hsmp` never exists on Rome regardless of BIOS settings. |
-| Kernel | `CONFIG_AMD_HSMP` (module `amd_hsmp`). CentOS Stream 9 / Rocky 9 ship it as `=m`. The module has no modalias and is platform-probed, so it needs explicit loading — the RPM installs a `modules-load.d` drop-in. |
+| CPU | AMD EPYC family 0x19 (Milan/Genoa/Bergamo/Siena) or 0x1A (Turin). Family 0x17 (Naples/Rome) is unsupported: the kernel driver's family gate (`legacy_hsmp_support()`) only binds 19h/1Ah, so `/dev/hsmp` never exists on Rome, whatever the BIOS settings. |
+| Kernel | `CONFIG_AMD_HSMP` (module `amd_hsmp`). CentOS Stream 9 / Rocky 9 ship it as `=m`. The module has no modalias and is platform-probed, so it needs explicit loading; the RPM installs a `modules-load.d` drop-in for that. |
 | BIOS | HSMP must be enabled in firmware. If it is not, the module may load but `/dev/hsmp` does not appear or every message errors. |
 | OS | EL9 or later (packaged for Rocky Linux 9 + EPEL 9; also builds on EL10 and current Fedora). |
 | Energy on pre-Turin parts | The HSMP RAPL messages exist from HSMP protocol version 7 (family 1Ah). On Milan/Genoa, per-core energy needs the opt-in MSR fallback: `msr` module plus `CAP_SYS_RAWIO` (see [Security model](#security-model)). |
@@ -63,36 +63,38 @@ it in that list is planned before v1.0. The port is a flag
 | `amd_hsmp_core_energy_joules_total` | Counter | `core`, `socket` | Cumulative energy of the physical core in joules (HSMP RAPL counter, or MSR fallback if enabled) |
 | `amd_hsmp_core_boost_limit_hertz` | Gauge | `core`, `socket` | Current maximum-frequency (boost) limit in hertz (converted from the firmware's MHz) |
 | `amd_hsmp_prochot_active` | Gauge | `socket` | 1 while the socket asserts PROCHOT (processor-hot throttling), else 0 |
-| `amd_hsmp_up` | Gauge | — | 1 if `/dev/hsmp` opens and answers `HSMP_GET_PROTO_VER` |
-| `amd_hsmp_protocol_version` | Gauge | — | HSMP protocol version reported by the SMU firmware |
-| `amd_hsmp_scrape_duration_seconds` | Gauge | — | Duration of the last HSMP scrape |
+| `amd_hsmp_up` | Gauge | none | 1 if `/dev/hsmp` opens and answers `HSMP_GET_PROTO_VER` |
+| `amd_hsmp_protocol_version` | Gauge | none | HSMP protocol version reported by the SMU firmware |
+| `amd_hsmp_scrape_duration_seconds` | Gauge | none | Duration of the last HSMP scrape |
 | `amd_hsmp_scrape_errors_total` | Counter | `collector` | Failed telemetry reads since start, by collector (`hsmp`, `core-energy`, `boost-limit`, `prochot`, `scrape`) |
 | `amd_hsmp_build_info` | Gauge | `version`, `revision`, `goversion` | Constant 1 |
 
 Standard `process_*` and `go_*` runtime metrics are also exposed.
 
-Values are emitted **per physical core, not per hardware thread**: core
+Values are emitted per physical core, not per hardware thread. Core
 energy and boost limit are core-scoped, and publishing them again for
 each SMT sibling would double the series count without adding
-information. The `core` label is the sysfs `core_id`, `socket` the
+information. The `core` label is the sysfs `core_id` and `socket` the
 `physical_package_id`. Internally each core is read through the APIC id
-of its lowest-numbered thread — APIC ids, not Linux CPU numbers, are what
-the HSMP messages take, and the two diverge on real topologies.
+of its lowest-numbered thread, because the HSMP messages take APIC ids
+rather than Linux CPU numbers, and the two diverge on real topologies.
 
-When a value is unavailable, its series is **absent** — never `-1`, never
-a stale placeholder. A missing device yields `amd_hsmp_up 0` with the
-telemetry families omitted; an unsupported message (for example RAPL on a
-pre-protocol-7 part) omits just that family; a single failed core read
-omits that one series and increments `amd_hsmp_scrape_errors_total`. Use
-`absent()` or `amd_hsmp_up` in alerting rather than testing for sentinel
-values. The exporter starts, serves and exits 0 in all of these cases —
-it never crash-loops because hardware support is missing.
+When a value is unavailable, its series is absent. The exporter never
+emits `-1` or a stale placeholder in its place. A missing device yields
+`amd_hsmp_up 0` with the telemetry families omitted. An unsupported
+message (for example RAPL on a pre-protocol-7 part) omits just that
+family. A single failed core read omits that one series and increments
+`amd_hsmp_scrape_errors_total`. Use `absent()` or `amd_hsmp_up` in
+alerting rather than testing for sentinel values. The exporter starts,
+serves and exits 0 in all of these cases, so it never crash-loops because
+hardware support is missing.
 
 ### Cardinality
 
-Roughly `2 × cores + sockets + 10` series per node: a dual-socket
-96-core Genoa node yields 192 energy series + 192 boost series +
-2 PROCHOT + meta ≈ **390 series**. Budget accordingly at fleet scale.
+Roughly `2 × cores + sockets + 10` series per node. A dual-socket
+96-core Genoa node yields 192 energy series, 192 boost series, 2 PROCHOT
+series and the meta metrics, about 390 series in total. Plan for that at
+fleet scale.
 
 ## Configuration
 
@@ -110,7 +112,7 @@ Flags (via `OPTIONS=` in `/etc/sysconfig/amd-hsmp-exporter`, the unit's
 | `--collector.core-energy.msr-fallback` | `false` | Read core energy from `/dev/cpu/<N>/msr` when HSMP RAPL is unavailable |
 | `--log.level` | `info` | `debug`, `info`, `warn`, `error` |
 | `--log.format` | `text` | `text` or `json` |
-| `--version` | — | Print version and exit |
+| `--version` | none | Print version and exit |
 
 Scrapes are serialized internally (HSMP is a serialized mailbox) and
 honor the `X-Prometheus-Scrape-Timeout-Seconds` header, so a slow or
@@ -123,7 +125,7 @@ under a hardened systemd unit (`NoNewPrivileges`, `ProtectSystem=strict`,
 syscall filtering, empty capability set, `DevicePolicy=closed` with only
 `/dev/hsmp` allowed). It touches exactly these interfaces:
 
-- `/dev/hsmp`, **opened read-only**. The driver allows GET (telemetry)
+- `/dev/hsmp`, opened read-only. The driver allows GET (telemetry)
   messages on a read-only descriptor and reserves SET messages for write
   access, which stays with root. Mainline kernels create the node with
   mode 0644 (`crw-r--r--`); the packaged udev rule
@@ -131,20 +133,20 @@ syscall filtering, empty capability set, `DevicePolicy=closed` with only
   read access so the exporter keeps working where stricter defaults or
   site policy apply.
 - `/proc/cpuinfo` and `/sys/devices/system/cpu/*/topology/*`, read once
-  at startup for the CPU→core→socket→APIC-id model.
-- `/dev/cpu/<N>/msr` — **only** with `--collector.core-energy.msr-fallback`,
+  at startup for the mapping from CPU to core, socket and APIC id.
+- `/dev/cpu/<N>/msr`, only with `--collector.core-energy.msr-fallback`,
   which is off by default. MSR access requires the `msr` module,
   `CAP_SYS_RAWIO` and device permissions; the unit file documents the
   three-line drop-in, and the packaged udev/modules-load files carry
-  commented entries. Note that kernel lockdown (Secure Boot) blocks MSR
-  reads regardless of capabilities. The MSR energy counter is 32-bit and
-  wraps (~65536 J per core at the usual energy unit); the exporter
+  commented entries. Kernel lockdown (Secure Boot) blocks MSR reads
+  regardless of capabilities. The MSR energy counter is 32-bit and wraps
+  (about 65536 J per core at the usual energy unit); the exporter
   accumulates it into a monotonic 64-bit counter internally, so the
-  exported series survives wraps and restarts cost only the usual
+  exported series survives wraps, and a restart costs only the usual
   counter reset.
 
 SELinux: under the stock targeted policy the service runs as
-`unconfined_service_t`. No custom policy module ships yet; confining the
+`unconfined_service_t`. No custom policy module ships yet. Confining the
 service with a small `.te` (read access to `hsmp_device_t`-labeled nodes,
 `proc_t`, `sysfs_t`) is a documented follow-up rather than a half-tested
 policy in the RPM.
@@ -153,8 +155,8 @@ policy in the RPM.
 
 | Symptom | Likely cause | Check |
 |---|---|---|
-| `amd_hsmp_up 0`, log says `no such file or directory` | `amd_hsmp` not loaded, or unsupported CPU family | `lsmod \| grep amd_hsmp`; `modprobe amd_hsmp`; `lscpu \| grep -E 'CPU family'` — family 23 (0x17, Rome) can never work, 25/26 can |
-| Module loads but `/dev/hsmp` absent | HSMP disabled in BIOS, or ACPI/platform probe failed | `dmesg \| grep -i hsmp` — look for probe errors; check BIOS/firmware settings |
+| `amd_hsmp_up 0`, log says `no such file or directory` | `amd_hsmp` not loaded, or unsupported CPU family | `lsmod \| grep amd_hsmp`; `modprobe amd_hsmp`; `lscpu \| grep -E 'CPU family'`: family 23 (0x17, Rome) can never work, 25 and 26 can |
+| Module loads but `/dev/hsmp` absent | HSMP disabled in BIOS, or ACPI/platform probe failed | `dmesg \| grep -i hsmp` for probe errors; check BIOS/firmware settings |
 | `amd_hsmp_up 0`, log says `permission denied` | udev rule not applied (device is root-only on this kernel) | `ls -l /dev/hsmp`; `udevadm trigger /dev/hsmp` after installing; group should be `amd-hsmp-exporter` or mode at least `0644` |
 | No `amd_hsmp_core_energy_joules_total`, log says RAPL not implemented | HSMP protocol version < 7 (Milan/Genoa) | `curl -s localhost:10054/metrics \| grep protocol_version`; enable the MSR fallback if you need per-core energy on these parts |
 | MSR fallback enabled but still no energy | `msr` module absent, missing `CAP_SYS_RAWIO`, or kernel lockdown | `lsmod \| grep '^msr'`; check the drop-in from the unit file's comment; `dmesg \| grep -i lockdown` |
@@ -197,24 +199,24 @@ scrape_configs:
 
 ## Verified kernel interface facts
 
-Recorded here so operators and reviewers do not need to re-derive them;
-sources are the mainline kernel (`arch/x86/include/uapi/asm/amd_hsmp.h`,
-`drivers/platform/x86/amd/hsmp/`) as of 2026. **Re-verify against the
-kernel actually deployed** — RHEL backports diverge, and
-`internal/hsmp/hsmp_test.go` locks the ABI in CI:
+Recorded here so operators and reviewers do not need to re-derive them.
+The sources are the mainline kernel (`arch/x86/include/uapi/asm/amd_hsmp.h`,
+`drivers/platform/x86/amd/hsmp/`) as of 2026. Re-verify against the
+kernel actually deployed, since RHEL backports diverge;
+`internal/hsmp/hsmp_test.go` locks the ABI in CI.
 
 - `struct hsmp_message` is 44 bytes; `HSMP_IOCTL_CMD` is `0xC02CF800`.
 - `HSMP_GET_RAPL_CORE_COUNTER` (0x31) has `response_sz = 2` per the
-  driver's message descriptor table `{1, 2, HSMP_GET}` — the prose
+  driver's message descriptor table `{1, 2, HSMP_GET}`. The prose
   comment in the uapi header saying 1 is wrong; the 64-bit counter comes
   back split across two response words.
-- `HSMP_GET_ENABLED_HSMP_CMDS` (0x37) does **not** exist in the mainline
+- `HSMP_GET_ENABLED_HSMP_CMDS` (0x37) does not exist in the mainline
   uapi header (the enum ends at 0x32), so feature detection probes the
   messages directly: the driver/firmware answer `ENOMSG` for
   unimplemented ones and the exporter omits those families.
 - `/dev/hsmp` is a misc device created with mode 0644; GET messages are
   permitted read-only, SET messages require write access (root).
-- The RAPL messages (0x30–0x32) are implemented from HSMP protocol
+- The RAPL messages (0x30 to 0x32) are implemented from HSMP protocol
   version 7 (family 1Ah, Turin). Milan/Genoa report lower versions and
   need the MSR fallback for per-core energy. The exporter logs the
   detected protocol version and the energy source it chose at startup.
@@ -235,6 +237,7 @@ $ go test -tags hsmp_hardware ./internal/hsmp/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) — note the Conventional Commits
-requirement, the self-contained-commit-message rule and the rebase-merge
-policy. Licensed under [Apache-2.0](LICENSE); see [NOTICE](NOTICE).
+See [CONTRIBUTING.md](CONTRIBUTING.md), in particular the Conventional
+Commits requirement, the self-contained-commit-message rule and the
+rebase-merge policy. Licensed under [Apache-2.0](LICENSE); see
+[NOTICE](NOTICE).
