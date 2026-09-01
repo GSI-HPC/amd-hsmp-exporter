@@ -235,6 +235,15 @@ excluded from CI:
 $ go test -tags hsmp_hardware ./internal/hsmp/
 ```
 
+## AI usage disclosure
+
+This project was developed with the help of an AI coding assistant,
+Anthropic's Claude through Claude Code. Code, packaging, CI and
+documentation were drafted with it and are reviewed and tested by the
+maintainers before they are committed. Commit messages carry no AI
+attribution by project policy (see [CONTRIBUTING.md](CONTRIBUTING.md));
+this section is the project-level disclosure instead.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), in particular the Conventional
