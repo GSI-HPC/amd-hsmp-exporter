@@ -2,24 +2,25 @@
 
 A small, pure-Go Prometheus exporter for the three AMD EPYC CPU telemetry
 values that [node_exporter](https://github.com/prometheus/node_exporter)
-cannot provide — the **per-core energy counter**, the **per-core boost
-(maximum frequency) limit** and the **per-socket PROCHOT status** — read
-directly from the kernel `amd_hsmp` driver's character device `/dev/hsmp`.
-It is a companion to node_exporter, running alongside it on the same node
-and scraped as a separate target; it is **not** a replacement, and it
-deliberately exports nothing else. Socket power and power limits, socket
-energy, temperatures, frequencies, C0 residency, DIMM telemetry and
-xGMI/PCIe bandwidth are all available from node_exporter's `hwmon`,
-`rapl`, `cpufreq`, `thermal_zone` and `drm` collectors on this hardware —
-enable those instead of asking this exporter to grow. GPU metrics belong
-to a GPU exporter such as
-[ROCm/device-metrics-exporter](https://github.com/ROCm/device-metrics-exporter)
-(GPU-only; CPU metrics were declined upstream there). The retired
+cannot provide: the **per-core energy counter**, the **per-core boost
+(maximum frequency) limit** and the **per-socket PROCHOT status**. It reads
+them directly from `/dev/hsmp`, the character device of the kernel's
+`amd_hsmp` driver.
+
+It is a companion to node_exporter, not a replacement. Both run on the
+same node and are scraped as separate targets, and this exporter
+deliberately exports nothing else. On AMD EPYC systems, socket power and
+power limits, socket energy, temperatures, frequencies, C0 residency, DIMM
+telemetry and xGMI/PCIe bandwidth are already exposed by node_exporter's
+`hwmon`, `rapl`, `cpufreq`, `thermal_zone` and `drm` collectors. Enable
+those instead of asking this exporter to grow. GPU metrics belong to a GPU
+exporter such as
+[ROCm/device-metrics-exporter](https://github.com/ROCm/device-metrics-exporter),
+which is GPU-only and has declined CPU metrics upstream. The retired
 [amd/amd_smi_exporter](https://github.com/amd/amd_smi_exporter) covered
-some of this ground via `libamdsmi`; this project replaces the three
-metrics of it that node_exporter cannot supply, with no C library, no
-cgo (`CGO_ENABLED=0` builds a working static binary) and no duplicated
-series.
+some of this ground via `libamdsmi`. This project replaces the three of
+its metrics that node_exporter cannot supply, with no C library, no cgo
+(`CGO_ENABLED=0` builds a working static binary) and no duplicated series.
 
 Metric names are **not yet stable**: this is a v0.x project and the
 exposition may still change between minor versions.
@@ -47,13 +48,13 @@ creating the unprivileged `amd-hsmp-exporter` user, a udev rule granting
 that user's group read access to `/dev/hsmp`, a modules-load.d drop-in for
 `amd_hsmp`, and `/etc/sysconfig/amd-hsmp-exporter` for flags.
 
-A note on the port: the exporter defaults to `:10054`. The conventional
-exporter range around 9100–9999 in the
+The exporter listens on `:10054` by default. The conventional exporter
+range, 9100 to 9999, in the
 [Prometheus default port allocations](https://github.com/prometheus/prometheus/wiki/Default-port-allocations)
-is fully allocated (9878, an earlier candidate, belongs to the Prometheus
-Relay Exporter), and 10054 is the first free port after the allocated
-block. Reserving it in that list is on the roadmap before v1.0; the port
-is a flag, not a constant, so site overrides are one `OPTIONS=` away.
+is fully allocated, and 10054 is the first free port after it. Reserving
+it in that list is planned before v1.0. The port is a flag
+(`--web.listen-address`), not a constant, so a site can override it in
+`OPTIONS=`.
 
 ## Exported metrics
 
