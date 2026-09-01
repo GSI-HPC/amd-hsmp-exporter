@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Command-line flags for amd-hsmp-exporter, passed via $OPTIONS in the
+# systemd unit. Run `amd-hsmp-exporter --help` for the full list.
+#
+# Examples:
+#   OPTIONS="--web.listen-address=:10054 --log.level=debug"
+#   OPTIONS="--collector.core-energy.msr-fallback"
+OPTIONS=""

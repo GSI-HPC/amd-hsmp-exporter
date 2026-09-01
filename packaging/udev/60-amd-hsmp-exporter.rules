@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Grant the amd-hsmp-exporter service user's group read access to the AMD
+# HSMP character device. The exporter opens the device read-only: the
+# amd_hsmp driver permits GET (telemetry) messages on a read-only file
+# descriptor and reserves SET messages for write access, which stays with
+# root. Mainline kernels create /dev/hsmp with mode 0644 already; this rule
+# keeps the exporter working where stricter defaults or site policy apply.
+SUBSYSTEM=="misc", KERNEL=="hsmp", GROUP="amd-hsmp-exporter", MODE="0640"
+
+# MSR fallback (opt-in, off by default): uncomment to let the exporter read
+# the per-core energy MSRs on pre-protocol-version-7 systems. Reading MSRs
+# additionally requires CAP_SYS_RAWIO — see the systemd unit's drop-in
+# example — and the msr module (see the modules-load file).
+#SUBSYSTEM=="msr", KERNEL=="msr[0-9]*", GROUP="amd-hsmp-exporter", MODE="0640"
