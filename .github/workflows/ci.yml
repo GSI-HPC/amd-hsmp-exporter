@@ -96,6 +96,11 @@ jobs:
       # create a network namespace inside the container.
       options: --privileged
     steps:
+      # The images ship without git. Without it actions/checkout silently
+      # falls back to downloading a repository tarball, which leaves no .git
+      # directory and makes the action's `git archive HEAD` fail.
+      - name: Install git for checkout
+        run: dnf -y install git-core
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/rpm-build
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
