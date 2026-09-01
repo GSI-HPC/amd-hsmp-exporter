@@ -1,0 +1,26 @@
+# HELP amd_hsmp_core_boost_limit_hertz Current maximum-frequency (boost) limit of the physical core in hertz.
+# TYPE amd_hsmp_core_boost_limit_hertz gauge
+amd_hsmp_core_boost_limit_hertz{core="0",socket="0"} 3.4e+09
+amd_hsmp_core_boost_limit_hertz{core="1",socket="0"} 3.5e+09
+amd_hsmp_core_boost_limit_hertz{core="0",socket="1"} 3.7e+09
+# HELP amd_hsmp_core_energy_joules_total Cumulative energy consumed by the physical core in joules, from the HSMP RAPL core counter or, if enabled, the MSR fallback.
+# TYPE amd_hsmp_core_energy_joules_total counter
+amd_hsmp_core_energy_joules_total{core="0",socket="0"} 1
+amd_hsmp_core_energy_joules_total{core="0",socket="1"} 3
+# HELP amd_hsmp_prochot_active 1 if the socket currently asserts PROCHOT (processor-hot throttling), 0 otherwise.
+# TYPE amd_hsmp_prochot_active gauge
+amd_hsmp_prochot_active{socket="0"} 0
+amd_hsmp_prochot_active{socket="1"} 1
+# HELP amd_hsmp_protocol_version HSMP interface (protocol) version reported by the SMU firmware.
+# TYPE amd_hsmp_protocol_version gauge
+amd_hsmp_protocol_version 7
+# HELP amd_hsmp_scrape_errors_total Number of failed telemetry reads since exporter start, by collector.
+# TYPE amd_hsmp_scrape_errors_total counter
+amd_hsmp_scrape_errors_total{collector="boost-limit"} 0
+amd_hsmp_scrape_errors_total{collector="core-energy"} 1
+amd_hsmp_scrape_errors_total{collector="hsmp"} 0
+amd_hsmp_scrape_errors_total{collector="prochot"} 0
+amd_hsmp_scrape_errors_total{collector="scrape"} 0
+# HELP amd_hsmp_up 1 if the HSMP device is usable (open succeeds and HSMP_GET_PROTO_VER answers), 0 otherwise.
+# TYPE amd_hsmp_up gauge
+amd_hsmp_up 1

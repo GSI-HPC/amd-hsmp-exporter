@@ -1,0 +1,10 @@
+# HELP amd_hsmp_scrape_errors_total Number of failed telemetry reads since exporter start, by collector.
+# TYPE amd_hsmp_scrape_errors_total counter
+amd_hsmp_scrape_errors_total{collector="boost-limit"} 0
+amd_hsmp_scrape_errors_total{collector="core-energy"} 0
+amd_hsmp_scrape_errors_total{collector="hsmp"} 1
+amd_hsmp_scrape_errors_total{collector="prochot"} 0
+amd_hsmp_scrape_errors_total{collector="scrape"} 0
+# HELP amd_hsmp_up 1 if the HSMP device is usable (open succeeds and HSMP_GET_PROTO_VER answers), 0 otherwise.
+# TYPE amd_hsmp_up gauge
+amd_hsmp_up 0
