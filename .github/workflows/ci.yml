@@ -104,7 +104,10 @@ jobs:
           path: rpm-artifacts/
 
   commit-lint:
-    if: github.event_name == 'pull_request'
+    # Dependabot's generated messages carry release-note links longer than
+    # the body line limit and module paths longer than the header limit;
+    # they are machine-shaped and reviewed as such, so skip them.
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read

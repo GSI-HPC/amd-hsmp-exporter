@@ -15,6 +15,14 @@ Dependencies are limited to `github.com/prometheus/client_golang` and
 `CGO_ENABLED=0 go build` must keep producing a working static binary
 (CI enforces this).
 
+Dependabot opens weekly, grouped pull requests for the workflow actions
+and the Go modules (`.github/dependabot.yml`). A Go bump rewrites
+`go.mod`, `go.sum` and `vendor/` but not the spec's
+`Provides: bundled(golang(...))` lines, so CI fails until the PR gains a
+commit produced by `scripts/check-bundled-provides.sh --fix`. Dependabot's
+own generated commit messages are exempt from the commit-message checks
+below.
+
 ## Commit messages
 
 Every commit follows [Conventional Commits](https://www.conventionalcommits.org/):
