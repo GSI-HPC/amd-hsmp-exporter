@@ -3,7 +3,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
 
 # Third-party actions are pinned to full commit SHAs (supply-chain

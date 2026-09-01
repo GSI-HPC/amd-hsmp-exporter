@@ -53,10 +53,10 @@ This repository uses **rebase merging exclusively** (repository settings:
 *Allow rebase merging* enabled, *Allow squash merging* and *Allow merge
 commits* disabled — keep it that way across maintainer changes). Squash
 merging would discard the individual commit messages that commit linting
-exists to protect; rebase merging replays every commit onto `master`
+exists to protect; rebase merging replays every commit onto `main`
 verbatim, so each linted message survives into permanent history. A PR
 title check is therefore deliberately absent — titles never reach
-`master`.
+`main`.
 
 The corollary: **every commit in a PR is a public commit** and must
 independently satisfy the rules above and build cleanly. Clean up your

@@ -9,7 +9,7 @@
 # this script heuristically catches the common context-reference lapses.
 #
 # Usage:
-#   check-commit-context.sh <rev-range>          # e.g. origin/master..HEAD
+#   check-commit-context.sh <rev-range>          # e.g. origin/main..HEAD
 #   check-commit-context.sh --message-file <f>   # commit-msg hook mode
 set -euo pipefail
 
