@@ -41,11 +41,10 @@ BuildRequires:  go-rpm-macros
 BuildRequires:  go-rpm-macros-epel
 %endif
 
-# Vendored modules (keep in sync with vendor/modules.txt; regenerate with:
-#   grep '^# ' vendor/modules.txt | awk '{v = substr($3, 2); gsub("-", "~", v);
-#     printf "Provides:       bundled(golang(%%s)) = %%s\\n", $2, v}' ).
-# Go pseudo-versions are written with "~" in place of "-": rpm allows at
-# most one "-" in a version string, and "~" is its pre-release separator.
+# Vendored modules (keep in sync with vendor/modules.txt; CI checks this,
+# regenerate with scripts/check-bundled-provides.sh --fix). Go pseudo-
+# versions are written with "~" in place of "-": rpm allows at most one
+# "-" in a version string, and "~" is its pre-release separator.
 Provides:       bundled(golang(github.com/beorn7/perks)) = 1.0.1
 Provides:       bundled(golang(github.com/cespare/xxhash/v2)) = 2.3.0
 Provides:       bundled(golang(github.com/kr/text)) = 0.2.0

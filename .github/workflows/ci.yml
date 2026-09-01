@@ -34,6 +34,16 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
       - name: go test
         run: go test -race -coverprofile=coverage.out ./...
+      - name: Vendor directory matches go.mod
+        run: |
+          go mod vendor
+          if [ -n "$(git status --porcelain -- go.mod go.sum vendor/)" ]; then
+            echo "vendor/ is out of sync with go.mod; run 'go mod vendor' and commit:" >&2
+            git status --short -- go.mod go.sum vendor/ >&2
+            exit 1
+          fi
+      - name: Spec bundled() provides match vendor/modules.txt
+        run: ./scripts/check-bundled-provides.sh
 
   build:
     runs-on: ubuntu-latest
