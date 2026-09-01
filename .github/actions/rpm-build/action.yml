@@ -19,7 +19,10 @@ runs:
           dnf -y install epel-release
         fi
         dnf -y install rpm-build rpmlint systemd-rpm-macros golang git-core util-linux
-        if [ "${ID}" = "fedora" ]; then
+        # EL9's own go-rpm-macros predate the current Fedora macros, so
+        # EPEL ships them as -epel overlay packages; EL10 and Fedora carry
+        # the current macros under the plain names.
+        if [ "${ID}" = "fedora" ] || [ "${VERSION_ID%%.*}" -ge 10 ]; then
           dnf -y install go-rpm-macros go-srpm-macros
         else
           dnf -y install go-rpm-macros-epel go-srpm-macros-epel

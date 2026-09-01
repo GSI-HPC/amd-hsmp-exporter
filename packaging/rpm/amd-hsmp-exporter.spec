@@ -35,7 +35,9 @@ ExclusiveArch:  x86_64
 
 BuildRequires:  golang >= 1.23
 BuildRequires:  systemd-rpm-macros
-%if 0%{?fedora}
+# EL9's own go-rpm-macros predate the current Fedora macros, so EPEL 9
+# ships them as an -epel overlay; EL10 and Fedora carry the current ones.
+%if 0%{?fedora} || 0%{?rhel} >= 10
 BuildRequires:  go-rpm-macros
 %else
 BuildRequires:  go-rpm-macros-epel
