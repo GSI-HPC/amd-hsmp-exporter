@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: Apache-2.0
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Tag, spec and CHANGELOG must agree
+        run: ./scripts/check-release-version.sh "${GITHUB_REF_NAME}"
+
+  rpm:
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: rockylinux/rockylinux:9
+      # --privileged solely for the offline-build proof (`unshare -n`).
+      options: --privileged
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/rpm-build
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rpms
+          path: rpm-artifacts/
+
+  tarball:
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build static binary tarball
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          go build -trimpath \
+            -ldflags "-s -w -X main.version=${version} -X main.revision=${GITHUB_SHA}" \
+            -o amd-hsmp-exporter ./cmd/amd-hsmp-exporter
+          file amd-hsmp-exporter | grep -q 'statically linked'
+          tar -czf "amd-hsmp-exporter-${version}.linux-amd64.tar.gz" \
+            amd-hsmp-exporter LICENSE NOTICE README.md
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tarball
+          path: amd-hsmp-exporter-*.linux-amd64.tar.gz
+
+  release:
+    needs: [rpm, tarball]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --verify-tag \
+            --title "amd-hsmp-exporter ${GITHUB_REF_NAME}" \
+            --notes "See CHANGELOG.md for what changed in this release." \
+            dist/*
