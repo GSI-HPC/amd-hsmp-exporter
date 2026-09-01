@@ -50,16 +50,14 @@ BuildRequires:  go-rpm-macros-epel
 # "-" in a version string, and "~" is its pre-release separator.
 Provides:       bundled(golang(github.com/beorn7/perks)) = 1.0.1
 Provides:       bundled(golang(github.com/cespare/xxhash/v2)) = 2.3.0
-Provides:       bundled(golang(github.com/kr/text)) = 0.2.0
 Provides:       bundled(golang(github.com/kylelemons/godebug)) = 1.1.0
 Provides:       bundled(golang(github.com/munnerz/goautoneg)) = 0.0.0~20191010083416~a7dc8b61c822
-Provides:       bundled(golang(github.com/prometheus/client_golang)) = 1.23.2
+Provides:       bundled(golang(github.com/prometheus/client_golang)) = 1.24.1
 Provides:       bundled(golang(github.com/prometheus/client_model)) = 0.6.2
-Provides:       bundled(golang(github.com/prometheus/common)) = 0.66.1
-Provides:       bundled(golang(github.com/prometheus/procfs)) = 0.16.1
-Provides:       bundled(golang(go.yaml.in/yaml/v2)) = 2.4.2
-Provides:       bundled(golang(golang.org/x/sys)) = 0.35.0
-Provides:       bundled(golang(google.golang.org/protobuf)) = 1.36.8
+Provides:       bundled(golang(github.com/prometheus/common)) = 0.70.1
+Provides:       bundled(golang(github.com/prometheus/procfs)) = 0.21.1
+Provides:       bundled(golang(golang.org/x/sys)) = 0.47.0
+Provides:       bundled(golang(google.golang.org/protobuf)) = 1.36.11
 
 %description %{common_description}
 
