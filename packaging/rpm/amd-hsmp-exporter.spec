@@ -42,13 +42,15 @@ BuildRequires:  go-rpm-macros-epel
 %endif
 
 # Vendored modules (keep in sync with vendor/modules.txt; regenerate with:
-#   grep '^# ' vendor/modules.txt |
-#     awk '{printf "Provides:       bundled(golang(%%s)) = %%s\n", $2, substr($3,2)}' )
+#   grep '^# ' vendor/modules.txt | awk '{v = substr($3, 2); gsub("-", "~", v);
+#     printf "Provides:       bundled(golang(%%s)) = %%s\\n", $2, v}' ).
+# Go pseudo-versions are written with "~" in place of "-": rpm allows at
+# most one "-" in a version string, and "~" is its pre-release separator.
 Provides:       bundled(golang(github.com/beorn7/perks)) = 1.0.1
 Provides:       bundled(golang(github.com/cespare/xxhash/v2)) = 2.3.0
 Provides:       bundled(golang(github.com/kr/text)) = 0.2.0
 Provides:       bundled(golang(github.com/kylelemons/godebug)) = 1.1.0
-Provides:       bundled(golang(github.com/munnerz/goautoneg)) = 0.0.0-20191010083416-a7dc8b61c822
+Provides:       bundled(golang(github.com/munnerz/goautoneg)) = 0.0.0~20191010083416~a7dc8b61c822
 Provides:       bundled(golang(github.com/prometheus/client_golang)) = 1.23.2
 Provides:       bundled(golang(github.com/prometheus/client_model)) = 0.6.2
 Provides:       bundled(golang(github.com/prometheus/common)) = 0.66.1
