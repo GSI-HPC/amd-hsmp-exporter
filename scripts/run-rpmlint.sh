@@ -20,7 +20,10 @@ set -euo pipefail
 #   current form.
 # - no-buildroot-tag: rpm has ignored `BuildRoot:` since 4.6 and the
 #   Fedora/EL packaging guidelines forbid it; rpmlint still asks for it.
-allow='no-manual-page-for-binary|spelling-error|invalid-license|no-buildroot-tag'
+# - invalid-url Source0: rpmlint fetches the URL, which is the GitHub
+#   archive of the tag being built. Every untagged commit CI builds 404s
+#   there by construction; the release workflow verifies the tag itself.
+allow='no-manual-page-for-binary|spelling-error|invalid-license|no-buildroot-tag|invalid-url Source0'
 
 out="$(rpmlint "$@" 2>&1)" || true
 printf '%s\n' "$out"
